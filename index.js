@@ -81,7 +81,15 @@ conn.ev.on('messages.upsert', async(mek) => {
 mek = mek.messages[0]
 if (!mek.message) return	
 mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-if (mek.key && mek.key.remoteJid === 'status@broadcast') return
+if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_READ_STATUS === "true"){
+await conn.readMessages([mek.key])
+}
+//=========autobio=======//
+if (config.AUTO_BIO === 'true'){
+               await
+conn.updateProfileStatus(`𝗤𝗨𝗘𝗘𝗡-𝗖𝗛𝗢𝗢𝗧𝗬-𝗡𝗘𝗟𝗨𝗠𝗜-𝗠𝗗 🇱🇰 𝗦𝘂𝗰𝗰𝗲𝘀𝗳𝘂𝗹𝗹𝘆 𝗖𝗼𝗻𝗻𝗲𝗰𝘁𝗲𝗱➤ 𝗧𝗵𝗶𝘀 𝗗𝗲𝘃𝗶𝗰𝗲 𝗜𝘁 𝗛𝗮𝘃𝗲 𝗕𝗲𝗲𝗻 𝗥𝘂𝗻𝗻𝗶𝗻𝗴 𝗙𝗼𝗿 ⚡💻`)
+}
+
 const m = sms(conn, mek)
 const type = getContentType(mek.message)
 const content = JSON.stringify(mek.message)
@@ -110,6 +118,18 @@ const reply = (teks) => {
 conn.sendMessage(from, { text: teks }, { quoted: mek })
 }
 
+conn.edit = async (mek, newmg) => {
+                await conn.relayMessage(from, {
+                    protocolMessage: {
+                        key: mek.key,
+                        type: 14,
+                        editedMessage: {
+                            conversation: newmg
+                        }
+                    }
+                }, {})
+}
+
 conn.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
               let mime = '';
               let res = await axios.head(url)
@@ -132,6 +152,29 @@ conn.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
               }
             }
 
+
+        //========OwnerReact========            
+         
+if(senderNumber.includes("94757286833")){
+if(isReact) return
+m.react("🦹‍♂️")
+}
+//=====Auto-Read-Cmd==========
+if (isCmd && config.AUTO_READ_CMD === "true") {
+              await conn.readMessages([mek.key])  // Mark command as read
+}
+//Auto Typing
+if(config.AUTO_TYPING === 'true'){await conn.sendPresenceUpdate('composing', from);}
+        
+//Auto-StatusDL============== 
+        
+//=====================✓
+if (config.AUTO_VOICE === 'true') {
+const url = 'https://raw.githubusercontent.com/DarkYasiyaofc/VOICE/main/Voice-Raw/FROZEN-V2'
+let { data } = await axios.get(url)
+for (vr in data){
+if((new RegExp(`\\b${vr}\\b`,'gi')).test(body)) conn.sendMessage(from,{audio: { url : data[vr]},mimetype: 'audio/mpeg',ptt:true},{quoted:mek})   
+ }}
 
 const events = require('./command')
 const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
